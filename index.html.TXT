@@ -380,23 +380,37 @@
             // Hide buttons on the actual DOM before rendering
             const buttons = document.querySelectorAll('.btn');
             buttons.forEach(btn => btn.style.display = 'none');
+            console.log('Botões ocultados para a renderização do PDF.');
 
             // Wait for all images in the printable area to load
+            console.log('Aguardando o carregamento das imagens...');
             await waitForImagesToLoad(printableArea);
+            console.log('Todas as imagens na área de impressão carregadas.');
+
+            // Force reflow/repaint - sometimes helps html2canvas capture the latest state
+            // Briefly hide and show the element to force a repaint
+            printableArea.style.display = 'none';
+            // Access offsetHeight to trigger a reflow
+            printableArea.offsetHeight;
+            printableArea.style.display = '';
+            console.log('Forçando reflow da área de impressão.');
+
 
             // Increased delay for better rendering
             setTimeout(() => {
+                console.log('Iniciando a geração do PDF após atraso de 3000ms...');
                 const options = {
                     margin: 10,
                     filename: 'servico_piscineiro.pdf',
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 4, logging: true, dpi: 192, letterRendering: true }, // Increased scale
+                    html2canvas: { scale: 4, logging: true, dpi: 192, letterRendering: true, useCORS: true }, // Increased scale, added useCORS
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
 
                 html2pdf().set(options).from(printableArea).toPdf().get('pdf').then(function (pdf) { // Directly use printableArea
                     preRenderedPdf = pdf; // Store the PDF object
                     showMessage('PDF preparado com sucesso! Agora você pode imprimir ou salvar.', 'success');
+                    console.log('PDF preparado e armazenado.');
                 }).catch(error => {
                     console.error('Erro ao preparar PDF:', error);
                     showMessage('Erro ao preparar PDF. Tente novamente.', 'error');
@@ -404,8 +418,9 @@
                     // Restore hidden elements
                     buttons.forEach(btn => btn.style.display = '');
                     loadingOverlay.classList.remove('visible'); // Hide loading overlay
+                    console.log('Botões restaurados e overlay de carregamento ocultado.');
                 });
-            }, 1500); // Further increased delay to 1500ms
+            }, 3000); // Further increased delay to 3000ms
         };
 
         // Function to print the content
