@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEB APP PISCINEIROS</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2pdf.js CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+        }
+        /* Custom styles for better PDF output */
+        .printable-content {
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            margin-bottom: 20px;
+        }
+        .printable-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 10px;
+            border-radius: 0.5rem; /* rounded-md */
+        }
+        /* Base button styles */
+        .btn {
+            @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200;
+        }
+        /* Loading overlay styles */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5rem;
+            z-index: 1000;
+            visibility: hidden; /* Hidden by default */
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s linear;
+        }
+        #loadingOverlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <div id="loadingOverlay">Preparando PDF... Por favor, aguarde.</div>
+
+    <header class="bg-blue-700 text-white p-4 shadow-md">
+        <div class="container mx-auto text-center">
+            <h1 class="text-3xl font-bold">WEB APP PISCINEIROS</h1>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto p-4 md:p-8">
+        <div id="app-container" class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <!-- Botões do topo - Azul Claro -->
+                <button id="newServiceBtn" class="btn bg-blue-400 text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-75">Gerar Novo Serviço</button>
+                <button id="loadServiceBtn" class="btn bg-blue-200 text-blue-800 hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:ring-opacity-75">Carregar Serviço Salvo</button>
+                <button id="saveServiceBtn" class="btn bg-blue-400 text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-75">Salvar Serviço no Navegador</button>
+            </div>
+
+            <div id="printable-area" class="printable-content">
+                <h2 class="text-2xl font-semibold mb-6 text-center text-blue-800">Detalhes do Serviço</h2>
+
+                <!-- Seção de Informações da Empresa/Piscineiro -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">Nome e Contato da Empresa:</label>
+                        <input type="text" id="companyName" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: Aqua Limpa (11) 98765-4321">
+                    </div>
+                    <div>
+                        <label for="cnpjCpf" class="block text-sm font-medium text-gray-700 mb-1">CNPJ da Empresa ou CPF do Piscineiro:</label>
+                        <input type="text" id="cnpjCpf" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: 00.000.000/0001-00 ou 000.000.000-00">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="piscineiroName" class="block text-sm font-medium text-gray-700 mb-1">Nome do Piscineiro:</label>
+                    <input type="text" id="piscineiroName" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: João da Silva">
+                </div>
+
+                <!-- Seção de Informações do Cliente -->
+                <div class="mb-4">
+                    <label for="clientNameAddress" class="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente e Endereço da Casa:</label>
+                    <textarea id="clientNameAddress" rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: Maria Oliveira, Rua das Flores, 123, Bairro Jardim"></textarea>
+                </div>
+
+                <!-- Seção de Data e Hora da Visita -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="visitDate" class="block text-sm font-medium text-gray-700 mb-1">Data da Visita:</label>
+                        <input type="date" id="visitDate" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="visitTime" class="block text-sm font-medium text-gray-700 mb-1">Hora da Visita:</label>
+                        <input type="time" id="visitTime" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Seção de Tipo de Serviço -->
+                <div class="mb-4">
+                    <label for="serviceType" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Serviço a Ser Executado:</label>
+                    <select id="serviceType" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Selecione o tipo de serviço</option>
+                        <option value="Limpeza Completa">Limpeza Completa</option>
+                        <option value="Tratamento Químico">Tratamento Químico</option>
+                        <option value="Aspiração">Aspiração</option>
+                        <option value="Filtragem">Filtragem</option>
+                        <option value="Manutenção de Equipamentos">Manutenção de Equipamentos</option>
+                        <option value="Outro">Outro (especificar abaixo)</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="additionalService" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Serviço Adicional:</label>
+                    <input type="text" id="additionalService" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: Limpeza de borda, Verificação de pH">
+                </div>
+
+                <!-- Seção de Fotos -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fotos do Serviço:</label>
+                    <!-- Botão para adicionar mais fotos -->
+                    <button id="addMorePhotosBtn" class="btn bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 mb-2">
+                        + Fotos
+                    </button>
+                    <!-- O input de arquivo real, que será acionado pelo botão -->
+                    <input type="file" id="photosInput" multiple accept="image/*" class="hidden">
+                    <div id="photosPreview" class="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- Image previews will be added here -->
+                    </div>
+                </div>
+
+                <!-- Seção de Materiais Usados -->
+                <div class="mb-4">
+                    <label for="materialsUsed" class="block text-sm font-medium text-gray-700 mb-1">Materiais Usados:</label>
+                    <textarea id="materialsUsed" rows="3" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: Cloro 1kg, Algicida 500ml, Barrilha 200g"></textarea>
+                </div>
+
+                <!-- Seção de Data e Hora de Saída -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="departureDate" class="block text-sm font-medium text-gray-700 mb-1">Data de Saída:</label>
+                        <input type="date" id="departureDate" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="departureTime" class="block text-sm font-medium text-gray-700 mb-1">Hora de Saída:</label>
+                        <input type="time" id="departureTime" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Seção de Observações -->
+                <div class="mb-4">
+                    <label for="observations" class="block text-sm font-medium text-gray-700 mb-1">Observações (necessidades futuras, etc.):</label>
+                    <textarea id="observations" rows="4" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: Necessário trocar filtro da piscina em 3 meses."></textarea>
+                </div>
+            </div>
+
+            <!-- Botões de Ação - Preto -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <button id="renderPdfPreviewBtn" class="btn bg-gray-700 text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-75 md:col-span-3">Preparar PDF</button>
+                <button id="printBtn" class="btn bg-gray-800 text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-75">Imprimir</button>
+                <button id="savePdfBtn" class="btn bg-gray-800 text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-75">Salvar PDF</button>
+                <button id="shareBtn" class="btn bg-gray-600 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">Compartilhar</button>
+                <button id="emailBtn" class="btn bg-gray-600 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 md:col-span-3">Enviar por E-mail</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white p-4 text-center mt-8">
+        <a href="#" class="text-blue-300 hover:underline" onclick="showSupportInfo(event)">Suporte "WebForOn"</a>
+    </footer>
+
+    <script>
+        // Get references to all necessary DOM elements
+        const newServiceBtn = document.getElementById('newServiceBtn');
+        const loadServiceBtn = document.getElementById('loadServiceBtn');
+        const saveServiceBtn = document.getElementById('saveServiceBtn');
+        const companyNameInput = document.getElementById('companyName');
+        const cnpjCpfInput = document.getElementById('cnpjCpf');
+        const piscineiroNameInput = document.getElementById('piscineiroName');
+        const clientNameAddressInput = document.getElementById('clientNameAddress');
+        const visitDateInput = document.getElementById('visitDate');
+        const visitTimeInput = document.getElementById('visitTime');
+        const serviceTypeSelect = document.getElementById('serviceType');
+        const additionalServiceInput = document.getElementById('additionalService');
+        const photosInput = document.getElementById('photosInput');
+        const addMorePhotosBtn = document.getElementById('addMorePhotosBtn');
+        const photosPreview = document.getElementById('photosPreview');
+        const materialsUsedTextarea = document.getElementById('materialsUsed');
+        const departureDateInput = document.getElementById('departureDate');
+        const departureTimeInput = document.getElementById('departureTime');
+        const observationsTextarea = document.getElementById('observations');
+        const renderPdfPreviewBtn = document.getElementById('renderPdfPreviewBtn');
+        const printBtn = document.getElementById('printBtn');
+        const savePdfBtn = document.getElementById('savePdfBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const emailBtn = document.getElementById('emailBtn');
+        const printableArea = document.getElementById('printable-area');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Global variable to store the pre-rendered PDF object
+        let preRenderedPdf = null;
+
+        // Array to store image data URLs
+        let imageDataUrls = [];
+
+        // Function to format date to YYYY-MM-DD
+        const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        // Function to format time to HH:MM
+        const formatTime = (date) => {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        };
+
+        // Function to generate a new service entry
+        const generateNewService = () => {
+            // Clear all fields
+            companyNameInput.value = '';
+            cnpjCpfInput.value = '';
+            piscineiroNameInput.value = '';
+            clientNameAddressInput.value = '';
+            serviceTypeSelect.value = '';
+            additionalServiceInput.value = '';
+            materialsUsedTextarea.value = '';
+            observationsTextarea.value = '';
+            photosInput.value = ''; // Clear file input
+            photosPreview.innerHTML = ''; // Clear image previews
+            imageDataUrls = []; // Clear image data
+            preRenderedPdf = null; // Clear pre-rendered PDF
+
+            // Set current date and time for visit
+            const now = new Date();
+            visitDateInput.value = formatDate(now);
+            visitTimeInput.value = formatTime(now);
+
+            // Set current date and time for departure (initially same as visit)
+            departureDateInput.value = formatDate(now);
+            departureTimeInput.value = formatTime(now);
+
+            showMessage('Novo serviço gerado com sucesso!', 'success');
+        };
+
+        // Function to save service data to local storage
+        const saveService = () => {
+            const serviceData = {
+                companyName: companyNameInput.value,
+                cnpjCpf: cnpjCpfInput.value,
+                piscineiroName: piscineiroNameInput.value,
+                clientNameAddress: clientNameAddressInput.value,
+                visitDate: visitDateInput.value,
+                visitTime: visitTimeInput.value,
+                serviceType: serviceTypeSelect.value,
+                additionalService: additionalServiceInput.value,
+                imageDataUrls: imageDataUrls, // Save image data URLs
+                materialsUsed: materialsUsedTextarea.value,
+                departureDate: departureDateInput.value,
+                departureTime: departureTimeInput.value,
+                observations: observationsTextarea.value
+            };
+            localStorage.setItem('piscineirosServiceData', JSON.stringify(serviceData));
+            showMessage('Serviço salvo no navegador!', 'success');
+        };
+
+        // Function to load service data from local storage
+        const loadService = () => {
+            const savedData = localStorage.getItem('piscineirosServiceData');
+            if (savedData) {
+                const serviceData = JSON.parse(savedData);
+                companyNameInput.value = serviceData.companyName || '';
+                cnpjCpfInput.value = serviceData.cnpjCpf || '';
+                piscineiroNameInput.value = serviceData.piscineiroName || '';
+                clientNameAddressInput.value = serviceData.clientNameAddress || '';
+                visitDateInput.value = serviceData.visitDate || '';
+                visitTimeInput.value = serviceData.visitTime || '';
+                serviceTypeSelect.value = serviceData.serviceType || '';
+                additionalServiceInput.value = serviceData.additionalService || '';
+                materialsUsedTextarea.value = serviceData.materialsUsed || '';
+                departureDateInput.value = serviceData.departureDate || '';
+                departureTimeInput.value = serviceData.departureTime || '';
+                observationsTextarea.value = serviceData.observations || '';
+
+                // Load images
+                imageDataUrls = serviceData.imageDataUrls || [];
+                renderImagePreviews();
+                showMessage('Serviço carregado com sucesso!', 'success');
+            } else {
+                showMessage('Nenhum serviço salvo encontrado no navegador.', 'info');
+            }
+        };
+
+        // Function to handle image file selection
+        const handlePhotosChange = (event) => {
+            const files = event.target.files;
+            if (files.length > 0) {
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imageDataUrls.push(e.target.result);
+                        renderImagePreviews();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        };
+
+        // Function to render image previews
+        const renderImagePreviews = () => {
+            photosPreview.innerHTML = ''; // Clear current previews
+            imageDataUrls.forEach((dataUrl, index) => {
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'relative group';
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.alt = `Foto do serviço ${index + 1}`;
+                img.className = 'w-full h-32 object-cover rounded-md shadow-sm';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '&times;'; // 'x' icon
+                removeBtn.className = 'absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-lg font-bold opacity-0 group-hover:opacity-100 transition-opacity';
+                removeBtn.onclick = () => removeImage(index);
+
+                imgContainer.appendChild(img);
+                imgContainer.appendChild(removeBtn);
+                photosPreview.appendChild(imgContainer);
+            });
+        };
+
+        // Function to remove an image
+        const removeImage = (indexToRemove) => {
+            imageDataUrls = imageDataUrls.filter((_, index) => index !== indexToRemove);
+            renderImagePreviews();
+            showMessage('Foto removida.', 'info');
+        };
+
+        // Function to ensure all images are loaded before PDF generation
+        const waitForImagesToLoad = (element) => {
+            const images = element.querySelectorAll('img');
+            const promises = [];
+            images.forEach(img => {
+                if (!img.complete) {
+                    promises.push(new Promise(resolve => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    }));
+                }
+            });
+            return Promise.all(promises);
+        };
+
+        // New function to render PDF for preview/saving
+        const renderPdfForPreview = async () => {
+            loadingOverlay.classList.add('visible'); // Show loading overlay
+            preRenderedPdf = null; // Clear any previous rendered PDF
+
+            // Hide buttons on the actual DOM before rendering
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => btn.style.display = 'none');
+
+            // Wait for all images in the printable area to load
+            await waitForImagesToLoad(printableArea);
+
+            // Increased delay for better rendering
+            setTimeout(() => {
+                const options = {
+                    margin: 10,
+                    filename: 'servico_piscineiro.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 4, logging: true, dpi: 192, letterRendering: true }, // Increased scale
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(options).from(printableArea).toPdf().get('pdf').then(function (pdf) { // Directly use printableArea
+                    preRenderedPdf = pdf; // Store the PDF object
+                    showMessage('PDF preparado com sucesso! Agora você pode imprimir ou salvar.', 'success');
+                }).catch(error => {
+                    console.error('Erro ao preparar PDF:', error);
+                    showMessage('Erro ao preparar PDF. Tente novamente.', 'error');
+                }).finally(() => {
+                    // Restore hidden elements
+                    buttons.forEach(btn => btn.style.display = '');
+                    loadingOverlay.classList.remove('visible'); // Hide loading overlay
+                });
+            }, 1500); // Further increased delay to 1500ms
+        };
+
+        // Function to print the content
+        const printContent = async () => {
+            if (!preRenderedPdf) {
+                showMessage('Por favor, clique em "Preparar PDF" primeiro.', 'info');
+                await renderPdfForPreview(); // Trigger render if not already done
+                if (!preRenderedPdf) return; // Exit if rendering failed
+            }
+            // Open in new window for printing
+            preRenderedPdf.output('dataurlnewwindow');
+        };
+
+        // Function to save content as PDF
+        const savePdf = async () => {
+            if (!preRenderedPdf) {
+                showMessage('Por favor, clique em "Preparar PDF" primeiro.', 'info');
+                await renderPdfForPreview(); // Trigger render if not already done
+                if (!preRenderedPdf) return; // Exit if rendering failed
+            }
+            preRenderedPdf.save('servico_piscineiro.pdf');
+        };
+
+        // Function to share the service (if navigator.share is available)
+        const shareService = async () => {
+            if (navigator.share) {
+                const serviceText = `Detalhes do Serviço Piscineiro:\n\n` +
+                                    `Empresa: ${companyNameInput.value}\n` +
+                                    `Piscineiro: ${piscineiroNameInput.value}\n` +
+                                    `Cliente: ${clientNameAddressInput.value}\n` +
+                                    `Data/Hora Visita: ${visitDateInput.value} ${visitTimeInput.value}\n` +
+                                    `Tipo de Serviço: ${serviceTypeSelect.value} ${additionalServiceInput.value ? `(${additionalServiceInput.value})` : ''}\n` +
+                                    `Materiais Usados: ${materialsUsedTextarea.value}\n` +
+                                    `Observações: ${observationsTextarea.value}`;
+                try {
+                    await navigator.share({
+                        title: 'Serviço Piscineiro',
+                        text: serviceText,
+                        // You can also add files if supported by the share target, but it's complex with data URLs
+                        // files: imageDataUrls.map(url => new File([url], 'image.png', { type: 'image/png' }))
+                    });
+                    showMessage('Serviço compartilhado com sucesso!', 'success');
+                } catch (error) {
+                    console.error('Erro ao compartilhar:', error);
+                    showMessage('Não foi possível compartilhar o serviço. Tente copiar e colar os detalhes.', 'error');
+                }
+            } else {
+                showMessage('Seu navegador não suporta a função de compartilhamento.', 'info');
+            }
+        };
+
+        // Function to send service details via email
+        const sendEmail = () => {
+            const subject = encodeURIComponent('Relatório de Serviço Piscineiro');
+            const body = encodeURIComponent(
+                `Prezado(a) Cliente,\n\n` +
+                `Segue o relatório do serviço de piscina realizado:\n\n` +
+                `Empresa: ${companyNameInput.value}\n` +
+                `CNPJ/CPF: ${cnpjCpfInput.value}\n` +
+                `Piscineiro: ${piscineiroNameInput.value}\n` +
+                `Cliente: ${clientNameAddressInput.value}\n` +
+                `Data da Visita: ${visitDateInput.value}\n` +
+                `Hora da Visita: ${visitTimeInput.value}\n` +
+                `Tipo de Serviço: ${serviceTypeSelect.value}\n` +
+                `Serviço Adicional: ${additionalServiceInput.value}\n` +
+                `Materiais Usados: ${materialsUsedTextarea.value}\n` +
+                `Data de Saída: ${departureDateInput.value}\n` +
+                `Hora de Saída: ${departureTimeInput.value}\n` +
+                `Observações: ${observationsTextarea.value}\n\n` +
+                `Atenciosamente,\n${companyNameInput.value || 'O Piscineiro'}`
+            );
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        };
+
+        // Function to show custom messages (instead of alert)
+        const showMessage = (message, type) => {
+            const messageBox = document.createElement('div');
+            messageBox.textContent = message;
+            messageBox.className = `fixed bottom-4 right-4 p-3 rounded-lg shadow-lg text-white z-50 transition-opacity duration-300 ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                'bg-blue-500'
+            }`;
+            document.body.appendChild(messageBox);
+
+            setTimeout(() => {
+                messageBox.style.opacity = '0';
+                messageBox.addEventListener('transitionend', () => messageBox.remove());
+            }, 3000);
+        };
+
+        // Function for support button
+        const showSupportInfo = (event) => {
+            event.preventDefault(); // Prevent default link behavior
+            showMessage('Para suporte, entre em contato com WebForOn. Este é um aplicativo de demonstração.', 'info');
+        };
+
+        // Event Listeners
+        newServiceBtn.addEventListener('click', generateNewService);
+        loadServiceBtn.addEventListener('click', loadService);
+        saveServiceBtn.addEventListener('click', saveService);
+        addMorePhotosBtn.addEventListener('click', () => photosInput.click());
+        photosInput.addEventListener('change', handlePhotosChange);
+        renderPdfPreviewBtn.addEventListener('click', renderPdfForPreview);
+        printBtn.addEventListener('click', printContent);
+        savePdfBtn.addEventListener('click', savePdf);
+        shareBtn.addEventListener('click', shareService);
+        emailBtn.addEventListener('click', sendEmail);
+
+        // Initial load: Generate a new service on app load
+        document.addEventListener('DOMContentLoaded', generateNewService);
+    </script>
+</body>
+</html>
