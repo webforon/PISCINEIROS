@@ -1,0 +1,27 @@
+{
+  "name": "WEB APP PISCINEIROS",
+  "short_name": "Piscineiros",
+  "description": "Aplicativo para registro de serviços de piscineiros.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#1e40af",
+  "icons": [
+    {
+      "src": "https://github.com/webforon/PISCINEIROS/blob/0d05168d8497c5c0a9099ee9c2fb4eea311da82c/192PX%20(1).png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://github.com/webforon/PISCINEIROS/blob/0d05168d8497c5c0a9099ee9c2fb4eea311da82c/512PX%20(1).png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "https://github.com/webforon/PISCINEIROS/blob/3be2f29cc3ef269400eb9e4d6bf560049bd2df52/180PIXEL.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple touch icon"
+    }
+  ]
+}
