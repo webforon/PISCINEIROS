@@ -65,7 +65,8 @@
             --tw-gradient-from: #4b5563; /* gray-700 */
             --tw-gradient-to: #1f2937; /* gray-900 */
         }
-        #shareBtn, #emailBtn {
+        /* Para os novos botões de compartilhamento */
+        #shareTextBtn, #sharePdfBtn, #emailBtn {
             --tw-gradient-from: #6b7280; /* gray-600 */
             --tw-gradient-to: #4b5563; /* gray-700 */
         }
@@ -216,7 +217,10 @@
                 <button id="renderPdfPreviewBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-75 md:col-span-3">Preparar PDF</button>
                 <button id="printBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-75">Imprimir</button>
                 <button id="savePdfBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-75">Salvar PDF</button>
-                <button id="shareBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">Compartilhar</button>
+
+                <!-- Novos botões para opções de compartilhamento -->
+                <button id="shareTextBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">Compartilhar Texto</button>
+                <button id="sharePdfBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">Compartilhar PDF</button>
                 <button id="emailBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 md:col-span-3">Enviar por E-mail</button>
             </div>
         </div>
@@ -249,7 +253,8 @@
         const renderPdfPreviewBtn = document.getElementById('renderPdfPreviewBtn');
         const printBtn = document.getElementById('printBtn');
         const savePdfBtn = document.getElementById('savePdfBtn');
-        const shareBtn = document.getElementById('shareBtn');
+        const shareTextBtn = document.getElementById('shareTextBtn'); // Novo
+        const sharePdfBtn = document.getElementById('sharePdfBtn');   // Novo
         const emailBtn = document.getElementById('emailBtn');
         const printableArea = document.getElementById('printable-area');
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -491,59 +496,117 @@
             preRenderedPdf.save('servico_piscineiro.pdf');
         };
 
-        // Function to share the service (if navigator.share is available)
-        const shareService = async () => {
+        // Function to get common service text for sharing/emailing
+        const getServiceText = () => {
+            return `Detalhes do Serviço Piscineiro:\n\n` +
+                   `Empresa: ${companyNameInput.value}\n` +
+                   `Piscineiro: ${piscineiroNameInput.value}\n` +
+                   `Cliente: ${clientNameAddressInput.value}\n` +
+                   `Data/Hora Visita: ${visitDateInput.value} ${visitTimeInput.value}\n` +
+                   `Tipo de Serviço: ${serviceTypeSelect.value} ${additionalServiceInput.value ? `(${additionalServiceInput.value})` : ''}\n` +
+                   `Materiais Usados: ${materialsUsedTextarea.value}\n` +
+                   `Observações: ${observationsTextarea.value}`;
+        };
+
+        // New function to share only text
+        const shareTextContent = async () => {
             if (navigator.share) {
-                const serviceText = `Detalhes do Serviço Piscineiro:\n\n` +
-                                    `Empresa: ${companyNameInput.value}\n` +
-                                    `Piscineiro: ${piscineiroNameInput.value}\n` +
-                                    `Cliente: ${clientNameAddressInput.value}\n` +
-                                    `Data/Hora Visita: ${visitDateInput.value} ${visitTimeInput.value}\n` +
-                                    `Tipo de Serviço: ${serviceTypeSelect.value} ${additionalServiceInput.value ? `(${additionalServiceInput.value})` : ''}\n` +
-                                    `Materiais Usados: ${materialsUsedTextarea.value}\n` +
-                                    `Observações: ${observationsTextarea.value}`;
                 try {
                     await navigator.share({
                         title: 'Serviço Piscineiro',
-                        text: serviceText,
-                        // You can also add files if supported by the share target, but it's complex with data URLs
-                        // files: imageDataUrls.map(url => new File([url], 'image.png', { type: 'image/png' }))
+                        text: getServiceText(),
                     });
-                    showMessage('Serviço compartilhado com sucesso!', 'success');
+                    showMessage('Texto do serviço compartilhado com sucesso!', 'success');
                 } catch (error) {
-                    console.error('Erro ao compartilhar:', error);
-                    showMessage('Não foi possível compartilhar o serviço. Tente copiar e colar os detalhes.', 'error');
+                    console.error('Erro ao compartilhar texto:', error);
+                    showMessage('Não foi possível compartilhar o texto do serviço.', 'error');
                 }
             } else {
-                showMessage('Seu navegador não suporta a função de compartilhamento.', 'info');
+                showMessage('Seu navegador não suporta a função de compartilhamento de texto.', 'info');
             }
         };
 
-        // Function to send service details via email
-        const sendEmail = () => {
+        // New function to share PDF (and text as context)
+        const sharePdfContent = async () => {
+            if (!preRenderedPdf) {
+                showMessage('Por favor, clique em "Preparar PDF" primeiro.', 'info');
+                await renderPdfForPreview();
+                if (!preRenderedPdf) return;
+            }
+
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([""], "dummy.pdf", { type: "application/pdf" })] })) {
+                // If can share files, try to share the PDF blob directly
+                try {
+                    const pdfBlob = preRenderedPdf.output('blob');
+                    const pdfFile = new File([pdfBlob], 'servico_piscineiro.pdf', { type: 'application/pdf' });
+                    await navigator.share({
+                        title: 'Relatório de Serviço Piscineiro',
+                        text: getServiceText() + "\n\n(PDF Anexado)",
+                        files: [pdfFile]
+                    });
+                    showMessage('PDF do serviço compartilhado com sucesso!', 'success');
+                } catch (error) {
+                    console.error('Erro ao compartilhar PDF:', error);
+                    showMessage('Não foi possível compartilhar o PDF diretamente. Tentando compartilhar o link.', 'error');
+                    // Fallback to sharing URL if file sharing fails or is not supported
+                    const pdfBlobUrl = preRenderedPdf.output('bloburl');
+                    try {
+                         await navigator.share({
+                            title: 'Relatório de Serviço Piscineiro',
+                            text: getServiceText() + `\n\nLink para o PDF: ${pdfBlobUrl}`, // Provide blob URL in text
+                        });
+                        showMessage('PDF do serviço compartilhado via link com sucesso!', 'success');
+                    } catch (err) {
+                         console.error('Erro ao compartilhar PDF via link:', err);
+                         showMessage('Não foi possível compartilhar o PDF.', 'error');
+                    }
+                }
+            } else if (navigator.share) {
+                // Fallback for browsers that support share but not file sharing
+                const pdfBlobUrl = preRenderedPdf.output('bloburl');
+                try {
+                     await navigator.share({
+                        title: 'Relatório de Serviço Piscineiro',
+                        text: getServiceText() + `\n\nLink para o PDF: ${pdfBlobUrl}`, // Provide blob URL in text
+                    });
+                    showMessage('PDF do serviço compartilhado via link com sucesso!', 'success');
+                } catch (err) {
+                     console.error('Erro ao compartilhar PDF via link:', err);
+                     showMessage('Não foi possível compartilhar o PDF.', 'error');
+                }
+            }
+             else {
+                showMessage('Seu navegador não suporta a função de compartilhamento de PDF. Por favor, salve o PDF e compartilhe manualmente.', 'info');
+                preRenderedPdf.save('servico_piscineiro.pdf'); // Offer to save if sharing not possible
+            }
+        };
+
+
+        // Function to send service details via email (PDF save + text body)
+        const sendEmail = async () => {
+            if (!preRenderedPdf) {
+                showMessage('Por favor, clique em "Preparar PDF" primeiro.', 'info');
+                await renderPdfForPreview();
+                if (!preRenderedPdf) return;
+            }
+
+            // Save the PDF first
+            preRenderedPdf.save('servico_piscineiro.pdf');
+            showMessage('PDF salvo! Por favor, anexe o PDF salvo manualmente ao e-mail.', 'info', 5000); // Show message longer
+
             const subject = encodeURIComponent('Relatório de Serviço Piscineiro');
             const body = encodeURIComponent(
                 `Prezado(a) Cliente,\n\n` +
                 `Segue o relatório do serviço de piscina realizado:\n\n` +
-                `Empresa: ${companyNameInput.value}\n` +
-                `CNPJ/CPF: ${cnpjCpfInput.value}\n` +
-                `Piscineiro: ${piscineiroNameInput.value}\n` +
-                `Cliente: ${clientNameAddressInput.value}\n` +
-                `Data da Visita: ${visitDateInput.value}\n` +
-                `Hora da Visita: ${visitTimeInput.value}\n` +
-                `Tipo de Serviço: ${serviceTypeSelect.value}\n` +
-                `Serviço Adicional: ${additionalServiceInput.value}\n` +
-                `Materiais Usados: ${materialsUsedTextarea.value}\n` +
-                `Data de Saída: ${departureDateInput.value}\n` +
-                `Hora de Saída: ${departureTimeInput.value}\n` +
-                `Observações: ${observationsTextarea.value}\n\n` +
-                `Atenciosamente,\n${companyNameInput.value || 'O Piscineiro'}`
+                getServiceText() +
+                `\n\nAtenciosamente,\n${companyNameInput.value || 'O Piscineiro'}\n\n` +
+                `*** Por favor, anexe o PDF "servico_piscineiro.pdf" que foi salvo no seu dispositivo. ***`
             );
             window.location.href = `mailto:?subject=${subject}&body=${body}`;
         };
 
         // Function to show custom messages (instead of alert)
-        const showMessage = (message, type) => {
+        const showMessage = (message, type, duration = 3000) => {
             const messageBox = document.createElement('div');
             messageBox.textContent = message;
             messageBox.className = `fixed bottom-4 right-4 p-3 rounded-lg shadow-lg text-white z-50 transition-opacity duration-300 ${
@@ -556,7 +619,7 @@
             setTimeout(() => {
                 messageBox.style.opacity = '0';
                 messageBox.addEventListener('transitionend', () => messageBox.remove());
-            }, 3000);
+            }, duration);
         };
 
         // Function for support button
@@ -574,7 +637,8 @@
         renderPdfPreviewBtn.addEventListener('click', renderPdfForPreview);
         printBtn.addEventListener('click', printContent);
         savePdfBtn.addEventListener('click', savePdf);
-        shareBtn.addEventListener('click', shareService);
+        shareTextBtn.addEventListener('click', shareTextContent); // Novo listener
+        sharePdfBtn.addEventListener('click', sharePdfContent);   // Novo listener
         emailBtn.addEventListener('click', sendEmail);
 
         // Initial load: Generate a new service on app load
