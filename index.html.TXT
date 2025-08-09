@@ -66,7 +66,7 @@
             --tw-gradient-to: #1f2937; /* gray-900 */
         }
         /* Para os novos botões de compartilhamento */
-        #shareTextBtn, #sharePdfBtn, #emailBtn {
+        #shareTextBtn, #sharePdfBtn, #emailBtn, #generateDescriptionPdfBtn { /* Adicionado o novo botão aqui */
             --tw-gradient-from: #6b7280; /* gray-600 */
             --tw-gradient-to: #4b5563; /* gray-700 */
         }
@@ -105,7 +105,7 @@
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto p-4 md:p-8">
+    <main id="mainContent" class="flex-grow container mx-auto p-4 md:p-8">
         <div id="app-container" class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 <!-- Botões do topo - Azul Claro -->
@@ -223,7 +223,13 @@
                 <button id="sharePdfBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">Compartilhar PDF</button>
                 <button id="emailBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 md:col-span-3">Enviar por E-mail</button>
             </div>
+             <!-- Novo botão para gerar a descrição do app em PDF -->
+             <div class="grid grid-cols-1 mt-6">
+                <button id="generateDescriptionPdfBtn" class="btn bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">Gerar Descrição do App (PDF)</button>
+            </div>
         </div>
+
+        <!-- Área para a descrição do aplicativo, inicialmente oculta - Removida daqui -->
     </main>
 
     <footer class="bg-gray-800 text-white p-4 text-center mt-8">
@@ -253,11 +259,14 @@
         const renderPdfPreviewBtn = document.getElementById('renderPdfPreviewBtn');
         const printBtn = document.getElementById('printBtn');
         const savePdfBtn = document.getElementById('savePdfBtn');
-        const shareTextBtn = document.getElementById('shareTextBtn'); // Novo
-        const sharePdfBtn = document.getElementById('sharePdfBtn');   // Novo
+        const shareTextBtn = document.getElementById('shareTextBtn');
+        const sharePdfBtn = document.getElementById('sharePdfBtn');
         const emailBtn = document.getElementById('emailBtn');
         const printableArea = document.getElementById('printable-area');
         const loadingOverlay = document.getElementById('loadingOverlay');
+        const generateDescriptionPdfBtn = document.getElementById('generateDescriptionPdfBtn'); // Novo botão
+        const appContainer = document.getElementById('app-container'); // O container principal do formulário
+        const mainContent = document.getElementById('mainContent'); // A tag main
 
         // Global variable to store the pre-rendered PDF object
         let preRenderedPdf = null;
@@ -628,7 +637,97 @@
             showMessage('Para suporte, entre em contato com WebForOn. Este é um aplicativo de demonstração.', 'info');
         };
 
-        // Event Listeners
+        // Function to generate the description text
+        const getAppDescriptionText = () => {
+            return `
+                <h1 class="text-3xl font-bold text-blue-700 mb-6 text-center">Descrição Detalhada do WEB APP PISCINEIROS</h1>
+                <p class="mb-4">Este aplicativo foi desenvolvido para simplificar e organizar o registro de serviços realizados por piscineiros, permitindo a gestão de informações do cliente, detalhes do serviço, materiais utilizados e fotos, com a capacidade de gerar relatórios em PDF.</p>
+
+                <h3 class="text-xl font-semibold text-blue-800 mt-6 mb-3">Funcionalidades Principais:</h3>
+
+                <h4 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Botões de Navegação (Topo):</h4>
+                <ul class="list-disc list-inside mb-4 ml-4">
+                    <li><strong>Gerar Novo Serviço:</strong> Limpa todos os campos do formulário para iniciar um novo registro, preenchendo automaticamente a data e hora atuais.</li>
+                    <li><strong>Carregar Serviço Salvo:</strong> Carrega os dados do último serviço salvo no navegador, incluindo as fotos.</li>
+                    <li><strong>Salvar Serviço no Navegador:</strong> Salva todos os dados do formulário (incluindo as fotos) no armazenamento local do seu navegador, permitindo que você retome o trabalho mesmo que feche o aplicativo.</li>
+                </ul>
+
+                <h4 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Campos do Formulário:</h4>
+                <ul class="list-disc list-inside mb-4 ml-4">
+                    <li><strong>Nome e Contato da Empresa:</strong> Campo para inserir o nome e telefone da sua empresa.</li>
+                    <li><strong>CNPJ da Empresa ou CPF do Piscineiro:</strong> Para registro do CNPJ da empresa ou CPF do piscineiro.</li>
+                    <li><strong>Nome do Piscineiro:</strong> Nome do profissional que realizou o serviço.</li>
+                    <li><strong>Nome do Cliente e Endereço da Casa:</strong> Informações completas do cliente e local do serviço.</li>
+                    <li><strong>Data da Visita:</strong> Data em que o serviço foi realizado (preenchimento automático ao iniciar novo serviço).</li>
+                    <li><strong>Hora da Visita:</strong> Hora em que o serviço foi iniciado (preenchimento automático ao iniciar novo serviço).</li>
+                    <li><strong>Tipo de Serviço a Ser Executado:</strong> Menu suspenso com opções predefinidas do tipo de serviço.</li>
+                    <li><strong>Tipo de Serviço Adicional:</strong> Campo para descrever serviços extras ou específicos não listados no menu suspenso.</li>
+                    <li><strong>Fotos do Serviço:</strong>
+                        <ul class="list-disc list-inside ml-4">
+                            <li><strong>Botão "+ Fotos":</strong> Permite selecionar uma ou mais imagens do seu dispositivo para adicionar ao registro. Você pode adicionar quantas fotos desejar.</li>
+                            <li>As fotos adicionadas são exibidas abaixo e podem ser removidas individualmente clicando no "X" que aparece ao passar o mouse sobre elas.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Materiais Usados:</strong> Campo para listar todos os produtos e materiais utilizados no serviço.</li>
+                    <li><strong>Data de Saída:</strong> Data em que o serviço foi finalizado (preenchimento automático ao iniciar novo serviço, mas editável).</li>
+                    <li><strong>Hora de Saída:</strong> Hora em que o serviço foi finalizado (preenchimento automático ao iniciar novo serviço, mas editável).</li>
+                    <li><strong>Observações:</strong> Campo para adicionar notas importantes, necessidades futuras do cliente, ou qualquer outra observação relevante.</li>
+                </ul>
+
+                <h4 class="text-lg font-semibold text-gray-800 mt-4 mb-2">Botões de Ação (Rodapé):</h4>
+                <ul class="list-disc list-inside mb-4 ml-4">
+                    <li><strong>Preparar PDF:</strong> Processa todos os dados e imagens do formulário, preparando o documento para impressão ou salvamento. É importante clicar neste botão e aguardar a confirmação ("PDF preparado com sucesso!") antes de usar as opções de impressão ou salvamento.</li>
+                    <li><strong>Imprimir:</strong> Abre a caixa de diálogo de impressão do seu navegador, permitindo que você imprima o relatório do serviço. Certifique-se de que seu navegador não está bloqueando pop-ups.</li>
+                    <li><strong>Salvar PDF:</strong> Salva o relatório do serviço como um arquivo PDF diretamente no seu dispositivo.</li>
+                    <li><strong>Compartilhar Texto:</strong> Permite compartilhar os detalhes do serviço como texto simples para outros aplicativos (WhatsApp, e-mail, etc.) utilizando a função nativa de compartilhamento do seu dispositivo.</li>
+                    <li><strong>Compartilhar PDF:</strong> Tenta compartilhar o relatório completo em PDF para outros aplicativos. A funcionalidade de compartilhamento de arquivos pode variar bastante entre dispositivos e aplicativos. Em alguns casos, o PDF pode ser enviado diretamente; em outros, será um link para o PDF temporário.</li>
+                    <li><strong>Enviar por E-mail:</strong> Salva o PDF do serviço no seu dispositivo. Em seguida, abre seu cliente de e-mail com os detalhes do serviço já preenchidos no corpo da mensagem. **Importante:** Você precisará anexar manualmente o arquivo PDF salvo do seu dispositivo ao e-mail.</li>
+                </ul>
+
+                <div class="mt-8 pt-4 border-t border-gray-300">
+                    <h3 class="text-xl font-semibold text-red-700 mb-3">Observações Importantes para o Cliente:</h3>
+                    <p class="mb-2"><strong>Observação sobre o Visual Futuro:</strong> Futuramente, podemos aprimorar ainda mais a interface visual do aplicativo, tornando-o ainda mais moderno, intuitivo e adaptado às últimas tendências de design. Nosso foco inicial foi na funcionalidade e praticidade para o uso em campo.</p>
+                    <p><strong>Observação sobre o Backend:</strong> Atualmente, este aplicativo funciona como uma ferramenta totalmente "offline" no navegador do seu dispositivo, o que significa que todos os dados são salvos localmente e não em um servidor externo. Isso o torna ideal para uso em campo e serviços rápidos, mesmo sem conexão à internet. Estamos explorando a possibilidade de integrar um backend (servidor) no futuro. Com um backend, poderíamos oferecer funcionalidades mais completas, como armazenamento em nuvem e sincronização de dados entre múltiplos dispositivos, além de relatórios mais avançados e gestão de clientes. Por enquanto, é uma solução muito útil e eficiente para o registro de pequenos serviços.</p>
+                </div>
+            `;
+        };
+
+        // Event listener para o novo botão "Gerar Descrição do App (PDF)"
+        generateDescriptionPdfBtn.addEventListener('click', async () => {
+            loadingOverlay.classList.add('visible'); // Mostra o overlay de carregamento
+
+            // Cria um elemento temporário para a renderização do PDF, fora da tela
+            const tempDescriptionArea = document.createElement('div');
+            tempDescriptionArea.style.position = 'absolute';
+            tempDescriptionArea.style.left = '-9999px'; // Move para fora da tela
+            tempDescriptionArea.style.top = '-9999px';
+            tempDescriptionArea.className = 'printable-content'; // Aplica estilos para impressão
+            document.body.appendChild(tempDescriptionArea); // Adiciona ao body
+
+            tempDescriptionArea.innerHTML = getAppDescriptionText(); // Preenche com o texto da descrição
+
+            // Espera por qualquer imagem que possa estar no conteúdo da descrição (se houver)
+            await waitForImagesToLoad(tempDescriptionArea);
+
+            // Pequeno atraso para garantir que tudo foi renderizado
+            setTimeout(() => {
+                const options = {
+                    margin: 10,
+                    filename: 'descricao_app_piscineiros.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(options).from(tempDescriptionArea).save().finally(() => {
+                    document.body.removeChild(tempDescriptionArea); // Remove o elemento temporário
+                    loadingOverlay.classList.remove('visible'); // Oculta o overlay de carregamento
+                });
+            }, 1000); // Atraso de 1 segundo para renderização
+        });
+
+
+        // Event Listeners for existing buttons
         newServiceBtn.addEventListener('click', generateNewService);
         loadServiceBtn.addEventListener('click', loadService);
         saveServiceBtn.addEventListener('click', saveService);
@@ -637,8 +736,8 @@
         renderPdfPreviewBtn.addEventListener('click', renderPdfForPreview);
         printBtn.addEventListener('click', printContent);
         savePdfBtn.addEventListener('click', savePdf);
-        shareTextBtn.addEventListener('click', shareTextContent); // Novo listener
-        sharePdfBtn.addEventListener('click', sharePdfContent);   // Novo listener
+        shareTextBtn.addEventListener('click', shareTextContent);
+        sharePdfBtn.addEventListener('click', sharePdfContent);
         emailBtn.addEventListener('click', sendEmail);
 
         // Initial load: Generate a new service on app load
