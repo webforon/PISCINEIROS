@@ -39,10 +39,38 @@
             margin-bottom: 10px;
             border-radius: 0.5rem; /* rounded-md */
         }
-        /* Base button styles */
+        /* Base button styles - agora com rounded-full, sombra e gradiente sutil */
         .btn {
-            @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200;
+            @apply px-4 py-2 rounded-full font-semibold transition-all duration-200 shadow-md; /* rounded-full e shadow-md */
+            background-image: linear-gradient(to right, var(--tw-gradient-stops)); /* Para o gradiente */
+            --tw-gradient-from: #3b82f6; /* Cor inicial do gradiente */
+            --tw-gradient-to: #2563eb; /* Cor final do gradiente */
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
         }
+
+        /* Cores específicas para os botões do topo */
+        #newServiceBtn, #saveServiceBtn {
+            --tw-gradient-from: #60a5fa; /* blue-400 */
+            --tw-gradient-to: #3b82f6; /* blue-500 */
+        }
+
+        #loadServiceBtn {
+            --tw-gradient-from: #bfdbfe; /* blue-200 */
+            --tw-gradient-to: #93c5fd; /* blue-300 */
+            color: #1e40af; /* text-blue-800 */
+        }
+
+        /* Cores específicas para os botões de ação (preto) */
+        #renderPdfPreviewBtn, #printBtn, #savePdfBtn {
+            --tw-gradient-from: #4b5563; /* gray-700 */
+            --tw-gradient-to: #1f2937; /* gray-900 */
+        }
+        #shareBtn, #emailBtn {
+            --tw-gradient-from: #6b7280; /* gray-600 */
+            --tw-gradient-to: #4b5563; /* gray-700 */
+        }
+
+
         /* Loading overlay styles */
         #loadingOverlay {
             position: fixed;
@@ -80,9 +108,9 @@
         <div id="app-container" class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 <!-- Botões do topo - Azul Claro -->
-                <button id="newServiceBtn" class="btn bg-blue-400 text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-75">Gerar Novo Serviço</button>
-                <button id="loadServiceBtn" class="btn bg-blue-200 text-blue-800 hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:ring-opacity-75">Carregar Serviço Salvo</button>
-                <button id="saveServiceBtn" class="btn bg-blue-400 text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-75">Salvar Serviço no Navegador</button>
+                <button id="newServiceBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-75">Gerar Novo Serviço</button>
+                <button id="loadServiceBtn" class="btn hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:ring-opacity-75">Carregar Serviço Salvo</button>
+                <button id="saveServiceBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-75">Salvar Serviço no Navegador</button>
             </div>
 
             <div id="printable-area" class="printable-content">
@@ -165,8 +193,8 @@
                 <!-- Seção de Fotos -->
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Fotos do Serviço:</label>
-                    <!-- Botão para adicionar mais fotos -->
-                    <button id="addMorePhotosBtn" class="btn bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 mb-2">
+                    <!-- Botão para adicionar mais fotos - Largura aumentada e padding ajustado -->
+                    <button id="addMorePhotosBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 mb-2 w-fit px-6 py-3">
                         + Fotos
                     </button>
                     <!-- O input de arquivo real, que será acionado pelo botão -->
@@ -185,11 +213,11 @@
 
             <!-- Botões de Ação - Preto -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <button id="renderPdfPreviewBtn" class="btn bg-gray-700 text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-75 md:col-span-3">Preparar PDF</button>
-                <button id="printBtn" class="btn bg-gray-800 text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-75">Imprimir</button>
-                <button id="savePdfBtn" class="btn bg-gray-800 text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-75">Salvar PDF</button>
-                <button id="shareBtn" class="btn bg-gray-600 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">Compartilhar</button>
-                <button id="emailBtn" class="btn bg-gray-600 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 md:col-span-3">Enviar por E-mail</button>
+                <button id="renderPdfPreviewBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-75 md:col-span-3">Preparar PDF</button>
+                <button id="printBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-75">Imprimir</button>
+                <button id="savePdfBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-75">Salvar PDF</button>
+                <button id="shareBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">Compartilhar</button>
+                <button id="emailBtn" class="btn text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 md:col-span-3">Enviar por E-mail</button>
             </div>
         </div>
     </main>
@@ -440,8 +468,17 @@
                 await renderPdfForPreview(); // Trigger render if not already done
                 if (!preRenderedPdf) return; // Exit if rendering failed
             }
-            // Open in new window for printing
-            preRenderedPdf.output('dataurlnewwindow');
+            // Use bloburl and then open and print
+            const pdfBlobUrl = preRenderedPdf.output('bloburl');
+            const printWindow = window.open(pdfBlobUrl);
+            if (printWindow) {
+                printWindow.onload = () => {
+                    printWindow.focus();
+                    printWindow.print();
+                };
+            } else {
+                showMessage('Pop-ups bloqueados. Por favor, permita pop-ups para imprimir.', 'error');
+            }
         };
 
         // Function to save content as PDF
